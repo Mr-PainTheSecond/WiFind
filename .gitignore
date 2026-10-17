@@ -36,3 +36,10 @@ _yardoc
 doc/
 *.sublime-project
 *.sublime-workspace
+
+# Wi-Fi sensing build outputs
+sensing/firmware/.pio/
+sensing/firmware/sdkconfig.tx
+sensing/firmware/sdkconfig.rx
+__pycache__/
+.pytest_cache/

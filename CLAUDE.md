@@ -5,13 +5,16 @@ Treat it as the plan of record; update it as decisions change.
 
 ## The idea in one line
 A real person hidden behind a curtain plays Red Light, Green Light, and **Wi-Fi signals** (ESP32 CSI)
-decide whether they moved. The same sensing powers a **Disaster mode** (the hidden person is a
-"trapped survivor" the system finds) and a **Guardian mode** (fall detection at home without cameras).
+decide whether they moved. The same sensing (presence, motion, breathing, falls) is then shown in
+several real-world use cases, each backed by a trained ML model and a measured accuracy number.
 A **Roblox** world mirrors the real person as an avatar, and online players can call "red light".
 
-Pitch line: "Same Wi-Fi, three uses: a game, a disaster rescue, and keeping grandparents safe at home
-without cameras. If Wi-Fi can catch you holding your breath behind a curtain, it can find a survivor
-behind a wall after a hurricane."
+Pitch line: "One pair of $5 Wi-Fi chips, no cameras: a game, a rescue sweep, a hot-car alarm, lights
+that know you're still there, and fall detection for grandparents. If Wi-Fi can catch you holding your
+breath behind a curtain, it can find someone who's still in a room after a disaster."
+
+**Team: Arwa, solo** (as of 2026-10-17; the original team moved to another project). Scope below is
+sized for one person; cut from the bottom up.
 
 ## Why this project (the goal)
 Beat past winners like Farsight (rover + VR + Gaussian splatting) and Permanence (3D VLM + object
@@ -29,35 +32,35 @@ usefulness, wow/creativity, completeness (works live), presentation. Line count 
 - **Plan B sensors:** HLK-LD2410 24 GHz radar (~$5-10, motion + still presence),
   Seeed MR60BHA2 60 GHz radar (~$30, breathing + heart rate).
 
-## The three modes
-### 1. Play mode (pulls the crowd in)
-- **Red Light, Green Light** (main game): move during green fills a progress bar; any motion on red
-  eliminates. Leaderboard (name/nickname, survival time, stillness score). AI voice callouts
-  ("You're holding your breath. Nice try.").
-- **Wi-Fi Heist**: grab the gator plushie without tripping the invisible Wi-Fi "beam"; on-screen
-  sensitivity meter. Uses only motion detection, so it's the most reliable game.
-- **Zen Master** (stretch, needs breathing): calmest, slowest steady breathing wins.
+## Use cases (one detector, several stories)
+Like Permanence (one tracking pipeline, framed as several applications), every use case reuses the same
+signals. Use cases are screens/framings on one pipeline, not separate builds.
 
-### 2. Disaster mode (the surprise twist, mostly physical + dashboard)
-- After a game round: "Now you're trapped." A disaster hits.
-- **Booth 4D effects** (cheap, big impact): fan blows wind (hurricane), LEDs flicker (lightning /
-  power outage), speaker plays thunder, rumble, sirens; optional vibration motor shakes the "rubble".
-- The **web dashboard** finds the hidden person: "Survivor detected, breathing, not moving, Priority 1"
-  (+ gas warning if the gas sensor is built).
-- Roblox here is limited to optional visuals (see Roblox scope).
+| Use case | What Wi-Fi detects | Demo | ML model that proves it |
+|---|---|---|---|
+| **Red Light, Green Light** (+ Wi-Fi Heist) | motion vs frozen | judge behind the curtain; Roblox avatar mirrors them | state classifier EMPTY / STILL / MOVING |
+| **Disaster / firefighter room sweep** | someone still present + breathing | after a round: thunder + flashing LEDs, dashboard "Survivor detected, breathing, not moving, Priority 1" | presence + breathing-present classifier |
+| **Hot car alarm** (child/pet left in a parked car) | still person breathing in an enclosed space | person sits frozen in a cardboard "car seat"; alert fires | same presence + breathing model |
+| **Smart lights that stay on when you sit still** | presence without motion | LED strip = room light; stays on while the person is frozen (where a PIR motion sensor would switch off), turns off when they leave | presence classifier |
+| **Guardian fall detection** | sudden spike, then lying still | Arwa falls onto a mat (never a judge) -> "Fall detected, breathing" | activity classifier: walk / sit down / lie down / fall |
 
-### 3. Guardian mode (the real-world use)
-- **Fall detection, rule-based first** (no ML needed): big sudden motion spike -> stillness for several
-  seconds -> person still present / breathing => "Person fell, not moving." Show a mock alert to family.
-  A trained classifier can come later if time allows.
-- Demo falls: a teammate falls onto a mattress/crash pad. **Never ask a judge to fall.**
-- Privacy angle: works without cameras in the home.
+Notes:
+- "Hot car" is a real requirement area (Euro NCAP rewards child presence detection; cars mostly use
+  60 GHz radar). Our version is a low-cost Wi-Fi alternative; say so.
+- "Smart lights" = presence (breathing-level micro-motion), NOT heartbeat.
+- Stretch: **occupancy count 0-3 people** ("how many are still in this room?" for evacuations), ML
+  classifier, medium-low confidence; show only if the measured accuracy is good.
+
+**Removed (don't make sense with 2 ESP32s / would be overclaiming):**
+- Wi-Fi heart rate (ESP32 CSI too noisy; MAX30102 only as ground truth for testing, never claimed as Wi-Fi).
+- Stadium / concert stampede crowd detection (one link can't see hundreds of people).
+- Gas sensor, booth fan, servo gator, Zen Master, Roblox rescue operation.
 
 ## Roblox scope (decided: keep it simple)
 - **In scope:** the real person's avatar moves when they move and freezes/gets knocked out based on
-  Wi-Fi; Roblox players can press "red light" (triggers the booth sound/LEDs, optionally a servo).
+  Wi-Fi; Roblox players can press "red light" (triggers the booth sound/LEDs).
 - **Optional stretch:** simple disaster visuals in Roblox (camera shake, falling parts, rising water)
-  timed with Disaster mode.
+  timed with the disaster twist.
 - **Cut / too difficult for now:** a full Roblox rescue operation (multiplayer digging, rescue
   gameplay). Rescue lives on the web dashboard instead.
 - Original art only; do not copy the Squid Game doll or other copyrighted assets.
@@ -69,41 +72,41 @@ must reach them inside the hiding spot:
 2. **LED strip on the player's side** of the curtain (green/red flood; glow is visible to the audience too).
 3. Optional: small tablet/old phone inside the booth showing red/green or their Roblox avatar.
 4. Optional: vibration motor the player holds.
-A physical servo gator is optional. If built, place it inside the booth facing the player (the
-audience sees it via webcam or its Roblox twin). Cut it first if short on time.
 
-## Feature list (locked scope)
-| Priority | Feature | Est. effort (person-hours) |
+## Feature list (locked scope, solo)
+| Priority | Feature | Est. effort (hours) |
 |---|---|---|
-| Core | Wi-Fi motion detection + calibration | 4-8 |
-| Core | Red Light/Green Light + speaker/LED cue | 6-10 |
-| Core | Wi-Fi Heist | 2-4 |
-| Core | Live "Wi-Fi vision" waterfall screen (proves it's real) | 2-4 |
+| Core | Wi-Fi motion + calibration (`sensing/host`, done; needs real-board testing) | 3-5 |
+| Core | Red Light, Green Light web page + speaker cue + Wi-Fi Heist | 5-8 |
+| Core | Live "Wi-Fi vision" graph (proves it's real) | 2-3 |
+| Core | ML: data collection tool, training script, confusion matrices | 6-10 |
 | Surprise | Roblox avatar moves/freezes; Roblox players trigger red light | 6-10 |
-| Surprise | Booth 4D disaster effects (fan, lightning LEDs, thunder) | 2-4 |
-| Stretch 1 | Fall detection (rule-based) + Guardian/Rescue dashboard | 7-14 |
-| Stretch 1 | Breathing (breath-holding callout, Zen Master) | 6-12 |
-| Stretch 2 | "How did it catch me?" replay; accuracy scoreboard (Wi-Fi vs hidden camera); AI gator trash talk | 8-14 |
-| Stretch 2 | Roblox disaster visuals | 6-12 |
-| Stretch 3 | Gas sensor in Disaster mode; QR "see your round" page (no names/emails stored) | 5-9 |
-| Cut | Roblox rescue operation, Wi-Fi heart rate, Hide and Seek with location, full skeleton pose, 3D printed parts | - |
+| Surprise | Use-case dashboard: rescue sweep, hot car, smart lights, fall alert | 4-6 |
+| Stretch | Fall detection model + demo | 3-5 |
+| Stretch | LED strip (player-side cue + "smart light" demo) | 2 |
+| Stretch | Occupancy count 0-3; camera-vs-Wi-Fi accuracy scoreboard; gator voice lines via macOS `say` | 4-8 |
+| Cut | see "Removed" above; full skeleton pose; 3D printed parts | - |
 
-Core + Surprise is ~22-40 person-hours. With a team of 3-4 (~110 person-hours budget), Stretch 1 and
-some of Stretch 2 are realistic. Always keep one working demo; cut from the bottom up.
+Core + Surprise is ~26-42 hours: more than one person has at a 36 h hackathon, so do the ESP32
+bring-up, go/no-go test, and as much data collection as the rules allow BEFORE the event. Always keep
+one working demo; record the backup video as soon as Red Light, Green Light works.
 
 ## Demo flow (about 3 minutes)
-1. Play: judge plays Red Light, Green Light behind the curtain, gets caught; replay shows the signal spike.
-2. Twist: "Now you're trapped." Fan, lightning LEDs, thunder.
-3. Rescue: dashboard shows "Survivor detected, breathing, not moving."
-4. Real use: Guardian mode; teammate falls onto the mat -> "Fall detected."
-5. Pitch line (above). Show measured accuracy numbers.
+1. Play: judge plays Red Light, Green Light behind the curtain, gets caught; Roblox avatar freezes/gets
+   knocked out; replay shows the signal spike.
+2. Twist: "Now you're trapped." Thunder + flashing LEDs; dashboard: "Survivor detected, breathing."
+3. Same signal, other stories (one screen each, ~15 s): hot car alert, smart light stays on while still.
+4. Guardian: Arwa falls onto the mat -> "Fall detected."
+5. Proof: confusion matrices / accuracy per use case, measured at the venue. Pitch line.
 
 ## Honest confidence
 - High: Roblox <-> laptop, ESP32 LEDs/servo/fan, game logic, booth effects.
 - Medium-high: Wi-Fi presence/motion behind a curtain at 1-2 m.
 - Medium: reliably telling "frozen" from small movements in a crowded hall (core risk).
 - Medium: rule-based fall detection (big spike then stillness is a strong pattern).
-- Medium-low: breathing in a crowd. Low: activity recognition / pose on single-antenna ESP32.
+- Medium-low: breathing in a crowd. Low: full pose on single-antenna ESP32.
+- Medium: fall vs sit vs lie down with an ML classifier (well studied: WiFall, RT-Fall), if trained on
+  data recorded at the venue spot. Medium-low: counting 0-3 people.
 - Wi-Fi heart rate is not reliable on ESP32; use camera rPPG (pyVHR) or MAX30102 if needed.
 - Wi-Fi does NOT go through meters of rubble/concrete. Realistic: fabric, drywall, wood, one interior
   wall, a few meters. Frame rescue use as light debris / wood-frame hurricane damage / room sweeps.
@@ -143,12 +146,25 @@ Fail -> switch core sensing to HLK-LD2410 radar (keep Wi-Fi as the research piec
 ## Architecture
 ```
 ESP32 TX --Wi-Fi packets--> ESP32 RX --USB serial (CSI)--> Python on laptop
-  Python: parse CSI -> clean/baseline -> motion (+ breathing, fall rule) -> state machine -> game logic
+  Python: parse CSI -> clean/baseline -> features -> rules + ML models -> state machine -> game logic
   FastAPI: /state (polled by Roblox + local screens), /command (red light from Roblox)
-  WebSocket -> local web screens: game, Wi-Fi vision waterfall, leaderboard, Rescue/Guardian dashboard
-  Laptop --USB serial--> ESP32 for LEDs / fan / optional servo / vibration
+  WebSocket -> local web screens: game, Wi-Fi vision, leaderboard, use-case dashboard
+  Laptop --USB serial--> ESP32 for LEDs
   Cloudflare Tunnel -> public HTTPS for Roblox
+Training only: webcam + YOLO pose (camera "teacher") auto-labels recorded CSI; camera off in the demo.
 ```
+
+## ML plan (runs on the laptop CPU; no GPU/Jetson/cloud needed)
+- There is no pretrained "YOLO for Wi-Fi": we record our own labelled CSI at the venue spot and train.
+- Models: scikit-learn random forest / gradient boosting on window features first (trains in seconds);
+  small 1D CNN in PyTorch only if needed (minutes on CPU, or Apple GPU via `device="mps"`).
+- Tasks: (1) EMPTY / STILL / MOVING, (2) walk / sit down / lie down / fall, (3) breathing present,
+  (4) stretch: people count 0-3.
+- Labels: from `record.py` session labels, plus a webcam running YOLO pose (e.g. Ultralytics YOLO11n-pose)
+  during collection as ground truth. Same idea as MIT RF-Pose (camera teaches the radio). Webcam is
+  for training/evaluation only, which keeps the "no cameras" claim true for the product.
+- Evaluate by holding out whole recording sessions (not random windows, which leak). Report confusion
+  matrices and compare against the rule-based detector.
 
 ## Open-source code to build on (all verified to exist)
 Wi-Fi CSI:
@@ -186,21 +202,15 @@ Note: the big results used special radios / multi-antenna routers, not ESP32s.
 - A sign-language learning game ("Sign Hero") was done at a previous SwampHacks; avoid sign-language ideas.
 
 ## Build order
-1. Before event: flash esp-csi to 2 ESP32s, stream CSI to laptop, see motion; run go/no-go test.
-2. Motion detection + calibration at the venue.
-3. Red Light/Green Light on local screen (offline backup) + speaker/LED cue inside the booth.
-4. Heist + Wi-Fi vision screen.
+1. Before event: flash `sensing/firmware` to 2 ESP32s, `check_link.py`, `go_no_go.py`.
+2. Motion detection + calibration at the venue; start recording labelled data immediately.
+3. Red Light, Green Light page (offline backup) + speaker cue; Wi-Fi vision; Heist.
+4. ML training script + first models; record backup demo video.
 5. Roblox avatar moving/freezing, then Roblox players triggering red light.
-6. Booth 4D disaster effects.
-7. Fall detection (rule-based) + Rescue/Guardian dashboard; breathing.
-8. Stretch items in priority order.
-Lock features; always keep one working demo; record backup video as soon as core works.
+6. Use-case dashboard (rescue, hot car, smart lights), fall detection.
+7. Stretch items in priority order.
 
-## Suggested team roles (adjust to team size)
-- Signal lead: ESP32s, CSI, motion, breathing, fall rule, calibration.
-- Game + screens: Red Light/Green Light, Heist, leaderboard, Wi-Fi vision, dashboards.
-- Roblox: Studio world, Luau scripts, HttpService polling, tunnel.
-- Hardware + story: LEDs, fan, speaker, booth build, gas sensor, Devpost, pitch, backup video.
+
 
 ## Working style
 Team prioritizes understanding the code, testing, and in-person communication. Prefer clear, readable
