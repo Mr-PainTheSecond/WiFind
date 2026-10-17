@@ -1,6 +1,3 @@
-# Downloaded ESP-IDF sources and Espressif toolchain (re-download, don't commit)
-third_party/esp-idf/
-third_party/toolchain/
 prober/build/
 
 *~

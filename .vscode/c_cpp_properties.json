@@ -2,29 +2,11 @@
     "configurations": [
         {
             "name": "ESP32",
-            "compilerPath": "${workspaceFolder}/third_party/toolchain/xtensa-esp-elf/bin/xtensa-esp32-elf-g++.exe",
+            "compilerPath": "C:/Users/santi/.espressif/tools/xtensa-esp-elf/esp-13.2.0_20240530/xtensa-esp-elf/bin/xtensa-esp32-elf-g++.exe",
+            "compileCommands": "${workspaceFolder}/prober/build/compile_commands.json",
             "includePath": [
-                "${workspaceFolder}/prober",
-                "${workspaceFolder}/third_party/esp-idf-config",
-                "${workspaceFolder}/third_party/esp-idf/components/esp_wifi/include",
-                "${workspaceFolder}/third_party/esp-idf/components/esp_wifi/include/local",
-                "${workspaceFolder}/third_party/esp-idf/components/esp_common/include",
-                "${workspaceFolder}/third_party/esp-idf/components/esp_event/include",
-                "${workspaceFolder}/third_party/esp-idf/components/esp_hw_support/include",
-                "${workspaceFolder}/third_party/esp-idf/components/esp_system/include",
-                "${workspaceFolder}/third_party/esp-idf/components/esp_rom/include",
-                "${workspaceFolder}/third_party/esp-idf/components/esp_netif/include",
-                "${workspaceFolder}/third_party/esp-idf/components/heap/include",
-                "${workspaceFolder}/third_party/esp-idf/components/newlib/platform_include",
-                "${workspaceFolder}/third_party/esp-idf/components/soc/esp32/include",
-                "${workspaceFolder}/third_party/esp-idf/components/xtensa/include",
-                "${workspaceFolder}/third_party/esp-idf/components/xtensa/esp32/include",
-                "${workspaceFolder}/third_party/esp-idf/components/freertos/FreeRTOS-Kernel/include",
-                "${workspaceFolder}/third_party/esp-idf/components/freertos/FreeRTOS-Kernel/portable/xtensa/include/freertos",
-                "${workspaceFolder}/third_party/esp-idf/components/freertos/config/include/freertos",
-                "${workspaceFolder}/third_party/esp-idf/components/freertos/config/xtensa/include"
+                "${workspaceFolder}/prober"
             ],
-            "defines": [],
             "cStandard": "gnu17",
             "cppStandard": "gnu++23",
             "intelliSenseMode": "gcc-x86"

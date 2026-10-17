@@ -1,5 +1,7 @@
+#include <esp_event.h>
 #include <esp_wifi.h>
 #include <esp_wifi_types.h>
+#include <nvs_flash.h>
 #include <freertos/FreeRTOS.h>
 #include <freertos/queue.h>
 #include <probe.h>
@@ -43,13 +45,49 @@ static void IRAM_ATTR snifferCallback(void* buf, wifi_promiscuous_pkt_type_t typ
     xQueueSendFromISR(sightingQueue, &s, nullptr);  // non-blocking handoff
 }
 
+// Channel the sniffer listens on. Phones send probe requests on every channel
+// while scanning, so a single fixed channel still catches them.
+static constexpr uint8_t kSnifferChannel = 1;
+
+// The Wi-Fi driver stores calibration data in NVS (flash), so NVS must be ready
+// before esp_wifi_init(). If the NVS partition is full or was written by a newer
+// IDF version, erase it and try again.
+static void initNvs() {
+    esp_err_t err = nvs_flash_init();
+    if (err == ESP_ERR_NVS_NO_FREE_PAGES || err == ESP_ERR_NVS_NEW_VERSION_FOUND) {
+        ESP_ERROR_CHECK(nvs_flash_erase());
+        err = nvs_flash_init();
+    }
+    ESP_ERROR_CHECK(err);
+}
+
+// Bring the Wi-Fi radio up without joining or hosting a network.
+// WIFI_MODE_NULL powers the radio for promiscuous capture only.
+static void initWifi() {
+    initNvs();
+
+    // The Wi-Fi driver posts its events (started, stopped, ...) to the default loop.
+    ESP_ERROR_CHECK(esp_event_loop_create_default());
+
+    wifi_init_config_t config = WIFI_INIT_CONFIG_DEFAULT();
+    ESP_ERROR_CHECK(esp_wifi_init(&config));
+    ESP_ERROR_CHECK(esp_wifi_set_storage(WIFI_STORAGE_RAM));  // nothing to persist
+    ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_NULL));
+    ESP_ERROR_CHECK(esp_wifi_start());
+}
+
 void startSniffer() {
     sightingQueue = xQueueCreate(64, sizeof(Sighting));
+
+    initWifi();
 
     wifi_promiscuous_filter_t filter{};
     filter.filter_mask = WIFI_PROMIS_FILTER_MASK_MGMT;
 
-    esp_wifi_set_promiscuous_filter(&filter);
-    esp_wifi_set_promiscuous_rx_cb(&snifferCallback);
-    esp_wifi_set_promiscuous(true);
+    ESP_ERROR_CHECK(esp_wifi_set_promiscuous_filter(&filter));
+    ESP_ERROR_CHECK(esp_wifi_set_promiscuous_rx_cb(&snifferCallback));
+    ESP_ERROR_CHECK(esp_wifi_set_promiscuous(true));
+
+    // The channel can only be set once promiscuous mode is on (no AP to follow).
+    ESP_ERROR_CHECK(esp_wifi_set_channel(kSnifferChannel, WIFI_SECOND_CHAN_NONE));
 }
