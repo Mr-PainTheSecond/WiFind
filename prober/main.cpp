@@ -1,7 +1,5 @@
 #include "probe.h"
 
-int main(int argc, char* argv[]) {
+extern "C" void app_main() {
     startSniffer();
 }
-
-
